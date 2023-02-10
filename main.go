@@ -16,15 +16,15 @@ type SitemapPage struct {
 }
 
 type NewsStory struct {
-	Location string `xml:"loc"`
-	Date string `xml:"news>publication_date"`
+	Location    string `xml:"loc"`
+	Date        string `xml:"news>publication_date"`
 	Publication string `xml:"news>publication>name"`
-	Title    string `xml:"news>title"`
+	Title       string `xml:"news>title"`
 }
 
-func getNewsStories() SitemapPage {
+func retrieveXml() *http.Response {
 	// retrieving sitemap from BBC News UK
-	resp, err := http.Get(bbcSiteMapLink)
+	response, err := http.Get(bbcSiteMapLink)
 
 	// checking for error
 	if err != nil {
@@ -32,16 +32,27 @@ func getNewsStories() SitemapPage {
 		os.Exit(1)
 	}
 
-	defer resp.Body.Close()
+	return response
+}
+
+func readXmlAsBytes() []byte {
+	response := retrieveXml()
+	defer response.Body.Close()
 
 	// getting byte arru from response body
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := ioutil.ReadAll(response.Body)
 
 	// checking for error
 	if err != nil {
 		fmt.Print("Error reading response body")
 		os.Exit(1)
 	}
+
+	return bytes
+}
+
+func getNewsStories() SitemapPage {
+	bytes := readXmlAsBytes()
 
 	// Un-marshalling byte array into SitemapIndex struct
 	var siteMapPage SitemapPage
