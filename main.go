@@ -11,8 +11,7 @@ import (
 
 const bbcSiteMapLink = "https://www.bbc.co.uk/sitemaps/https-sitemap-uk-news-2.xml"
 
-type SitemapIndex struct {
-	// <loc> tag under each <url>
+type SitemapPage struct {
 	NewStories []NewsStory `xml:"url"`
 }
 
@@ -23,11 +22,7 @@ type NewsStory struct {
 	Title    string `xml:"news>title"`
 }
 
-type NewsPage struct {
-	News SitemapIndex
-}
-
-func getNewsStories() SitemapIndex {
+func getNewsStories() SitemapPage {
 	// retrieving sitemap from BBC News UK
 	resp, err := http.Get(bbcSiteMapLink)
 
@@ -49,18 +44,17 @@ func getNewsStories() SitemapIndex {
 	}
 
 	// Un-marshalling byte array into SitemapIndex struct
-	var siteMap SitemapIndex
-	xml.Unmarshal(bytes, &siteMap)
+	var siteMapPage SitemapPage
+	xml.Unmarshal(bytes, &siteMapPage)
 
-	return siteMap
+	return siteMapPage
 }
 
 func newsHandler(responseWriter http.ResponseWriter, request *http.Request) {
 
-	siteMap := getNewsStories()
-	newsPage := NewsPage{News: siteMap}
+	siteMapPage := getNewsStories()
 	template, _ := template.ParseFiles("news.html")
-	err := template.Execute(responseWriter, newsPage)
+	err := template.Execute(responseWriter, siteMapPage)
 
 	if err != nil {
 		fmt.Print("Error parsing template")
