@@ -3,23 +3,33 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
 )
 
+const bbcSiteMapLink = "https://www.bbc.co.uk/sitemaps/https-sitemap-uk-news-2.xml"
+
 type SitemapIndex struct {
-	Urls []URL `xml:"url"`
+	// <loc> tag under each <url>
+	NewStories []NewsStory `xml:"url"`
 }
 
-type URL struct {
+type NewsStory struct {
 	Location string `xml:"loc"`
+	Date string `xml:"news>publication_date"`
+	Publication string `xml:"news>publication>name"`
+	Title    string `xml:"news>title"`
 }
 
-func main() {
+type NewsPage struct {
+	News SitemapIndex
+}
 
+func getNewsStories() SitemapIndex {
 	// retrieving sitemap from BBC News UK
-	resp, err := http.Get("https://www.bbc.co.uk/sitemaps/https-sitemap-uk-news-2.xml")
+	resp, err := http.Get(bbcSiteMapLink)
 
 	// checking for error
 	if err != nil {
@@ -29,7 +39,7 @@ func main() {
 
 	defer resp.Body.Close()
 
-	// getting byte arru from response body 
+	// getting byte arru from response body
 	bytes, err := ioutil.ReadAll(resp.Body)
 
 	// checking for error
@@ -42,9 +52,22 @@ func main() {
 	var siteMap SitemapIndex
 	xml.Unmarshal(bytes, &siteMap)
 
-	// iterating over URL slice + printing each news story location (link)
-	for _, newsStory := range siteMap.Urls {
-		fmt.Println(newsStory.Location)
-	}
+	return siteMap
+}
 
+func newsHandler(responseWriter http.ResponseWriter, request *http.Request) {
+
+	siteMap := getNewsStories()
+	newsPage := NewsPage{News: siteMap}
+	template, _ := template.ParseFiles("news.html")
+	err := template.Execute(responseWriter, newsPage)
+
+	if err != nil {
+		fmt.Print("Error parsing template")
+	}
+}
+
+func main() {
+	http.HandleFunc("/news", newsHandler)
+	http.ListenAndServe(":8080", nil)
 }

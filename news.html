@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>News</title>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css">
+</head>
+
+<body>
+    <h1>Todays News</h1>
+    <table>
+        <tr>
+            <th>Story</th>
+            <th>Date</th>
+            <th>Publication</th>
+            <th>Link</th>
+        </tr>
+        {{range .News.NewStories}}
+        <tr>
+            <td>{{.Title}}</td>
+            <td>{{.Date}}</td>
+            <td>{{.Publication}}</td>
+            <td><a href={{.Location}} target="_blank"> {{.Location}}</a></td>
+        </tr>
+        {{end}}
+    </table>
+</body>
+
+</html>
